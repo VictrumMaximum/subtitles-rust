@@ -1,6 +1,6 @@
 use std::{
     fs::{self, DirEntry, File},
-    io::{self, BufRead, BufReader, Error},
+    io::{self, BufRead, BufReader, Error, Lines},
     num::ParseIntError,
 };
 
@@ -78,11 +78,46 @@ fn get_number_input() -> Result<usize, ParseIntError> {
 }
 
 fn parse_file(file_path: String) -> Result<Vec<Subtitle>, Error> {
-    Ok(Vec::new())
+    let file = File::open(file_path).unwrap();
+    let buf_reader = BufReader::new(file);
+
+    let mut it = buf_reader.lines();
+
+    let mut res = Vec::new();
+
+    while let Some(Ok(x)) = it.next() {
+        if let Ok(index) = x.parse::<u32>() {
+            res.push(parse_subtitle_block(&mut it));
+        }
+    }
+
+    Ok(res)
+}
+
+fn parse_subtitle_block(it: &mut Lines<BufReader<File>>) -> Subtitle {
+    // TODO: Deal with this double unwrap
+    let time = it.next().unwrap().unwrap();
+
+    let duration = 0; // TODO: set correct duration
+
+    let mut lines = Vec::new();
+
+    while let Some(Ok(x)) = it.next() {
+        if x.is_empty() {
+            break;
+        } else {
+            lines.push(x);
+        }
+    }
+
+    Subtitle { duration, lines }
+}
+
+struct ParseSubtitleError {
+    reason: String,
 }
 
 struct Subtitle {
-    index: u32,
     duration: u64, // ms
-    rows: Vec<String>,
+    lines: Vec<String>,
 }
