@@ -13,6 +13,6 @@ pub fn clear_and_print<T: Display>(mut out: impl Write, text: T) -> Result<(), s
     Ok(())
 }
 
-fn clear_screen(mut out: impl Write) -> Result<(), std::io::Error> {
+pub fn clear_screen(mut out: impl Write) -> Result<(), std::io::Error> {
     execute!(out, MoveTo(0, 1), Clear(ClearType::FromCursorDown))
 }

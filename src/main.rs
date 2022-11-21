@@ -1,47 +1,33 @@
-use std::{
-    io::{self, stdout},
-    thread::sleep,
-    time::Duration,
-};
+use std::io::{self, stdout};
 
-// mod file_select;
-// use crate::file_select::select_file_path;
+mod drawer;
+mod file_select;
+mod parse_file;
 
-// mod parse_file;
-// use crate::parse_file::parse_file;
+mod subtitler;
+use subtitler::start_subtitles;
 
 mod alternate_screen;
 use alternate_screen::{init_screen, restore_screen};
 
 mod controller;
-use controller::start_controller;
 
-mod drawer;
-use drawer::clear_and_print;
+use crate::file_select::select_file_path;
+use crate::parse_file::{parse_file, Subtitle};
 
 fn main() -> Result<(), io::Error> {
-    let stdout = stdout();
+    let out = stdout();
 
-    init_screen(&stdout)?;
+    let file_path = select_file_path();
+    println!("Selected file: {}", file_path);
 
-    let rx = start_controller();
+    let subtitles = parse_file(file_path)?;
 
-    'outer: loop {
-        while let Ok(c) = rx.try_recv() {
-            if c == 'q' {
-                break 'outer;
-            }
-            clear_and_print(&stdout, format!("pressed key: {}", c))?;
-        }
+    // println!("{:?}", subtitles.iter().take(5).collect::<Vec<&Subtitle>>());
 
-        sleep(Duration::from_millis(100));
-    }
-
-    restore_screen(&stdout)?;
-
-    // let file_path = select_file_path();
-    // println!("Selected file: {}", file_path);
-    // let subtitles = parse_file(file_path);
+    init_screen(&out)?;
+    start_subtitles(&out, subtitles)?;
+    restore_screen(&out)?;
 
     Ok(())
 }
